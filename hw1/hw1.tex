@@ -1,0 +1,163 @@
+%
+%     hw1.tex
+%     Benjamin Brown (bpbrown@colorado.edu)
+%     Jan 24, 2017
+%
+%     Problemset 1 for ASTR 5550, Obs & Stats taught at
+%     University of Colorado, Boulder, Spring 2017.
+%
+
+\input{preamble.tex}
+\lfoot{Problem Set 1}
+
+\begin{document}
+
+\section*{Problem Set 1 (due Wed Feb 1).}
+\begin{description}
+\item[Detrending Kepler data (20 pts)] ~\\
+    The \emph{Kepler} spacecraft monitored stars for several years, 
+    providing amazing photometric lightcurves with precisions in
+    the parts-per-million range.  This exquisitely low error is
+    requisite for \emph{Kepler's} main science objective: detecting
+    Earth-like planets around other stars.  The raw data that comes
+    off the spacecraft however has large, long-timescale variations
+    due to a variety of factors including thermal
+    expansion/contraction of the telescope's optical path and 
+    stars drifting out of their designated ``pixel aperture''.  These
+    long-timescale variations can be removed by detrending the data in
+    various ways.  Here, we're going to unleash the power of linear
+    regression to remove a low-order polynomial from real
+    \emph{Kepler} data.  Our target is \textbf{KIC-7200111}, 
+    a Sun-like star, and we'll look at it's $3^{\textrm{rd}}$ quarter
+    data\footnote{from MAST, at 
+      \url{https://archive.stsci.edu/kepler/data_search/search.php}}.
+    Kepler data, as with many other forms of
+    astronomical data, is in FITS format.  To get started, install 
+    \verb+pyfits+ by doing \verb+$pip3 install pyfits+ at your command
+    line.   This problem
+    will also provide your introduction to python3\footnote{I sugest you do
+      all work in this class in python version 3, not version 2.},
+    to \href{https://bitbucket.org/}{bitbucket},
+    to plotting, and to Latex\footnote{If you need to brush up
+      on your LaTeX, start with ``The not so short introduction to
+      LaTeX,'' at \href{http://www.ctan.org/tex-archive/info/lshort/english/}{http://www.ctan.org/tex-archive/info/lshort/english}.
+      This is an excellent resource.}.
+
+    \emph{NOTE: the code snippet
+       produces two lightcurves: an uncorrected one and a PDC
+       lightcurve, which is the Kepler ``first pass" at error
+       correction.  Throughout this homework, do the fitting, etc. to
+       the uncorrected lightcurve.  We will compare our results to PDC at the end.}
+
+ \begin{enumerate}
+   \setcounter{enumi}{-1}
+   \item Go to the MAST website, enter \textbf{7200111} in the field
+     "Kepler ID" and click on the quarter~3 dataset.  At the top of
+     the page, download the light curve (.fits) file. 
+
+   \item Using the code provided, read in the Kepler FITS file data.
+     Plot the lightcurve and make sure it agrees broadly 
+     with the image you saw on MAST.  
+
+    \item Using linear regression and least squares, produce
+      polynomial fits for the uncorrected lightcurve.  Sample a
+      variety of polynomial degrees (at least from 1 to 4).  Plot the
+      resulting polynomial fits over the data.  Comment.
+
+     \item Detrend the data by removing a $N=3$ polynomial.  Plot
+       this detrended data, and on the same plot, show the PDC lightcurve from the
+       \emph{Kepler} pipeline\footnote{you'll need to
+         remove the mean from PDC, since detrending removes the mean
+         from the raw lightcurve}.  
+       Comment on the agreement between our
+       crude polynomial fitting technique and PDC.
+       \label{detrended data}
+
+       \item What could be the source of the remaining wiggles in the
+         stellar lightcurve?  Justify.
+
+\end{enumerate}
+\newpage
+  \item[Analyzing Kepler data (20 pts)]~\\
+    Here we continue on with our \emph{Kepler} explorations.
+    Our target remains \textbf{KIC-7200111}.  Now it's time to try
+    Fourier transforms of the data to obtain periods.
+
+\begin{enumerate}
+  \setcounter{enumi}{-1}
+   \item Start with your detrended solution from Part 1: subpart \ref{detrended data}.
+
+   \item Library FFTs (Fast Fourier Transforms) require data on 
+     uniformly sampled locations.
+     Use \verb+np.interp()+ to interpolate your data onto a uniform
+     grid with 8192 equally spaced time points.  The function
+     \verb+np.linspace()+ may be helpful.  Confirm that your
+     interpolated data agrees reasonably with your original detrended
+     data (plotting and chi-by-eye is sufficient here).
+
+   \item Perform a FFT on your data, using \verb+np.fft.fft()+. 
+     How do the returned coefficients in the FFT array 
+     map onto temporal frequencies? (e.g., what frequency is stored in
+     FFT[0]?  What frequencies are stored in increasing locations
+     within the array?  What happens after we pass the mid-point in
+     the array?) \emph{hint: read the numpy docs}.
+
+   \item Form the power spectrum by multiplying the FFT by it's
+     complex conjugate.  Plot the power spectrum versus frequency for
+     the positive frequencies.
+     Use a loglog scale.
+
+   \item Identify the two highest peaks of power.  What frequencies
+     do these correspond to?  What periods do these correspond to
+     ($P=1/f$)?  What might these periods represent?
+
+   \item The FFT assumes that your data is periodic.  Is this data
+     periodic?  What problems could arise from non-periodicity?
+\end{enumerate}
+
+\item[Asteroseismology (10 pts)] ~\\
+    Let's try playing with Short Cadence \emph{Kepler} data.  Go to
+    the MAST webpage and search for \emph{16 Cyg a}, one of the brightest stars
+    observed with \emph{Kepler}.  Find the Q7 Short Cadence (target
+    type: SC) data and download the FITS file.  The target is
+    \textbf{KIC-100002741}, and the file is \verb+kplr100002741-2010296114515_slc.fits+.
+    Now it's time to try Fourier transforms of the data to obtain
+    oscillations.
+\begin{enumerate}
+  \item  Use least squares to fit and remove a
+     $N=3$ polynomial from the data.  Interpolate the data onto a
+     uniform grid with $2^{16}=65536$ points in time.  Take the FFT
+     and form the powerspectrum.  Plot the powerspectrum on a log-log
+     scale.  Comment.  
+
+     \item Plot the powerspectrum a second time on a
+     linear-linear scale, with units of seconds$^{-1}$ on the frequency
+     axis (previously you used day$^{-1}$).  Zoom in on the frequency range from
+     $1.5\times 10^{-3}$--$3.0\times 10^{-3}$ sec$^{-1}$, and choose a y-scale
+     that emphasizes the peaks.  How does the peak oscillation
+     frequency compare to the peak of the solar helioseismic
+     oscillations?  
+
+     \item \emph{Extra credit:} what could you infer about the
+     qualitative stellar properties of \emph{Cyg 16 }a compared to the Sun based on the
+     oscillation frequencies?
+
+\end{enumerate}
+
+\textbf{To hand in:} answers to the above problems, plus labelled,
+clearly designed figures for all requested plots.  
+We would also like your final code producing the figures.  Hand code in via
+\href{bitbucket.org}{https://bitbucket.org/}\footnote{We will go over
+  version control in class, but please set up an account on
+  \href{bitbucket.org}{https://bitbucket.org/} now.   Use your
+  colorado.edu e-mail address and request an ``academic'' license.
+If you want to go further, install the ``mercurial'' DVCS software on
+your computer.  You will very likely need Mac or Linux throughout this
+course.}; we might consider other options for handing in code,
+depending on preferences from our grader.
+
+\end{description}
+
+\input{hw1_code.tex}
+
+\end{document}

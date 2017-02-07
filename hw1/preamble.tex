@@ -1,0 +1,45 @@
+\documentclass[12pt, preprint]{aastex6}
+% formatting based on 2014 NASA ATP proposal with Jeff Oishi
+
+%%%%%%begin preamble
+\usepackage[hmargin=1in, vmargin=1in]{geometry} % Margins
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{times}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{pdfpages}
+\usepackage{import}
+\usepackage{listings}
+
+\hypersetup{
+     colorlinks   = true,
+     citecolor     = gray,
+     urlcolor       = blue
+}
+
+%% headers
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{ASTR 5550}
+\chead{}
+
+\cfoot{\thepage}
+\rfoot{Spring 2017}
+% no hline under header
+\renewcommand{\headrulewidth}{0pt}
+
+\newcommand{\sol}{\ensuremath{\odot}}
+\newcommand{\dedalus}{\href{http://dedalus-project.org}{Dedalus}}
+\renewcommand{\vec}{\boldsymbol}
+\newcommand{\del}{\vec{\nabla}}
+% make lists compact
+\usepackage{enumitem}
+%\setlist{nosep}
+
+\newenvironment{solution}{\color{blue} \textbf{Solution:} }{}
+
+%%%%%%end preamble
