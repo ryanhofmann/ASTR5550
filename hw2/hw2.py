@@ -71,10 +71,23 @@ def plot(p=0.3, N=1000):
 
 if __name__=="__main__":
 
+  # Explicitly initialize pseudorandom number generator
   np.random.seed(42)
 
+  # Create plots for cluster hunt
   plot(0.3, 1000)
   plot(0.3, 10)
   plot(0.3, 100)
   plot(0.3, 10000)
   plot(0.1, 10000)
+
+  # Plot PDF for third problem
+  x = np.arange(0,10,.1)
+  y = x*np.exp(-x)
+  plt.plot(x, y, linewidth=2)
+  plt.xlabel("x")
+  plt.ylabel("f(x)")
+  plt.savefig("PDF.eps")
+  plt.savefig("PDF.png")
+  plt.clf()
+
