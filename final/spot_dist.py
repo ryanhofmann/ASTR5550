@@ -38,7 +38,7 @@ nspots = np.random.randint(1,nspots_max+1,N)
 fname = "N_{:d}_nspots_{:.0f}.pkl".format(N, nspots_max)
 alpha_max = 10
 spot_area = 0.5*(1-np.cos(alpha_max*np.pi/180))  # fraction of star covered by spot
-data = np.zeros((N, 5))
+data = np.zeros((N, 6))
 amps = np.linspace(0,10,11)/100  # amplitude bins
 
 # Generate simulation data
@@ -59,13 +59,16 @@ for i in tqdm(range(N)):
     # Compute lightcurve amplitude
     amp = 0.5*(np.max(model(ts)) - np.min(model(ts)))
 
+    # Compute lightcurve variance
+    var = np.var(model(ts))
+
     # Compute TDV mean and sigma (units of Rp/R*)
     TDV = model(ts)**-1
     TDV_mean = np.mean(TDV)
     TDV_sigma = np.std(TDV)
 
     # Record data in array
-    data[i] = [nspots[i], inc[i], amp, TDV_mean, TDV_sigma]
+    data[i] = [nspots[i], inc[i], amp, var, TDV_mean, TDV_sigma]
 
     # If last iteration, pickle data
     if i == N-1:
@@ -109,7 +112,7 @@ for i in range(len(amps)-1):
 
 # Plot mean TDVs vs mean spot coverage
 area = data[:,0]*(1 - 0.5*np.sin(data[:,1]))*spot_area
-counts, xbins, ybins, image = plt.hist2d(area, data[:,3], bins=nspots_max, cmap='Greys', norm=colors.LogNorm())
+counts, xbins, ybins, image = plt.hist2d(area, data[:,4], bins=nspots_max, cmap='Greys', norm=colors.LogNorm())
 plt.contour(counts.transpose(),extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],linewidths=3)
 plt.xlabel("mean spot coverage")
 plt.ylabel("mean TDV")
@@ -119,7 +122,7 @@ plt.savefig("N_{:d}_TDV_vs_area.png".format(N))
 plt.close()
 
 # Plot mean TDVs vs amplitude
-counts, xbins, ybins, image = plt.hist2d(data[:,2], data[:,3], bins=3*nspots_max, cmap='Greys', norm=colors.LogNorm())
+counts, xbins, ybins, image = plt.hist2d(data[:,2], data[:,4], bins=3*nspots_max, cmap='Greys', norm=colors.LogNorm())
 #plt.contour(counts.transpose(),extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],linewidths=3)
 plt.xlabel("lightcurve amplitude")
 plt.ylabel("mean transit depth variation")
@@ -131,6 +134,24 @@ plt.ylim((1,1.3))
 plt.title("mode fit: y-1 = {:.2f}*x^{:.2f}".format(c1,c2))
 plt.tight_layout()
 plt.savefig("N_{:d}_TDV_vs_amplitude.png".format(N))
+plt.close()
+
+# Plot mean TDVs vs sigma
+subdata = data[np.where(data[:,1] > 0.9*np.pi/2.)]
+counts, xbins, ybins, image = plt.hist2d(subdata[:,3]**0.5, subdata[:,4], bins=2*nspots_max, cmap='Greys', norm=colors.LogNorm())
+#plt.contour(counts.transpose(),extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],linewidths=3)
+plt.xlabel("lightcurve sigma")
+plt.ylabel("mean transit depth variation")
+#plt.plot([0,0.4], [1,1.4], color='goldenrod', linewidth=3)
+#c1, c2 = 9.22, 1.63
+#plt.plot(np.linspace(0.005,0.095,10), 1+c1*np.linspace(0.005,0.095,10)**c2, color='goldenrod', linewidth=3)
+plt.axvline(0.0075, color='k')
+plt.axvline(0.0125, color='k')
+#plt.xlim((0,0.0015))
+#plt.ylim((1,1.3))
+#plt.title("mode fit: y-1 = {:.2f}*x^{:.2f}".format(c1,c2))
+plt.tight_layout()
+plt.savefig("N_{:d}_TDV_vs_sigma.png".format(N))
 plt.close()
 
 # Plot mean spot coverage vs amplitude
@@ -145,14 +166,26 @@ plt.tight_layout()
 plt.savefig("N_{:d}_area_vs_amplitude.png".format(N))
 plt.close()
 
+# Plot mean spot coverage vs variance
+counts, xbins, ybins, image = plt.hist2d(data[:,3]**0.5, area, bins=nspots_max, cmap='Greys', norm=colors.LogNorm())
+plt.contour(counts.transpose(),extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],linewidths=3)
+#plt.plot([0,0.12], [0,0.12], color='goldenrod', linewidth=3)
+plt.xlabel("lightcurve sigma")
+plt.ylabel("mean spot coverage")
+#plt.axis('equal')
+plt.title("N = {:d}, alpha_max = {:d}".format(N, alpha_max))
+plt.tight_layout()
+plt.savefig("N_{:d}_area_vs_sigma.png".format(N))
+plt.close()
+
 # Compute power-law fit to TDV vs amplitude using least squares
 amax = 10
 x = np.linspace(0.005, 0.01*amax-0.005, amax)
 y = np.zeros(amax)
 sigma = np.zeros(amax)
 for i in range(amax):
-  y[i] = np.mean(data[np.where(np.abs(data[:,2] - x[i]) < x[0]/2)][:,3])
-  sigma[i] = np.std(data[np.where(np.abs(data[:,2] - x[i]) < x[0]/2)][:,3])
+  y[i] = np.mean(data[np.where(np.abs(data[:,2] - x[i]) < x[0]/2)][:,4])
+  sigma[i] = np.std(data[np.where(np.abs(data[:,2] - x[i]) < x[0]/2)][:,4])
 Y = np.transpose(np.log(y-1))
 A = np.ones((amax,2))
 A[:,1] = np.log(x)
